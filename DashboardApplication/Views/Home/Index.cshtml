@@ -1,0 +1,288 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+
+}
+
+<link rel="stylesheet" href="~/css/Dashboard.css" />
+<script src="@Url.Content("~/js/chart.js")"></script>
+@*<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>*@
+<div class="dashboard_box" style="margin-bottom:1%;">
+    <div class="dashboard_box_desc">
+        <p class="box_value_p">@ViewData["Rate"]%</p>
+        <p>Rate</p>
+    </div>
+    <div class="dashboard_box_desc">
+        <p class="box_value_p">@ViewBag.ViewValue Million</p>
+        <p>View</p>
+    </div>
+    <div class="dashboard_box_desc_2">
+        <p class="box_value_p">@ViewData["IncomeRate"]%</p>
+        <p>Income Rate Growth</p>
+    </div>
+    <div class="dashboard_box_desc_2">
+        <p class="box_value_p">@ViewData["TotlaIncome"] Million</p>
+        <p>Total Income</p>
+    </div>
+</div>
+<div class="dashboard_view">
+    <div class="dashboard_chart">
+        <div>
+            <canvas id="UnitRentChart"></canvas>
+        </div>
+    </div>
+    <div class="dashboard_desc">
+        <div>
+            <p id="top_3_tenants">Top 3 Tenants </p>
+            @{
+                List<DashboardViewModel>tenantList = new List<DashboardViewModel>();
+                if(ViewBag.TenantDetail != null)
+                {
+                    if(ViewBag.TenantDetail.Count > 0)
+                    {
+                        tenantList = ViewBag.TenantDetail;
+                        foreach (var tenantLists in tenantList.OrderByDescending(x => x.TotalIncome).Take(3).ToList())
+                        {
+                            <div style="padding: 0!important;">
+                                <p style="display:inline-block; color:@tenantLists.ColorCode;">@tenantLists.TenantName</p>
+                                <p style="display:inline-block; margin-left:3%; color:@tenantLists.ColorCode;">$@tenantLists.TotalIncome?.ToString("#,###")</p>
+                            </div>
+                        }
+                    }
+                }
+            }
+        </div>
+        <div style="margin-top:9%;  height: 188px;">
+            <p id="total_income_desc" style="margin-top: 14%;">Total Income</p>
+            @if(ViewBag.TenantDetail != null)
+            {
+                if(ViewBag.TenantDetail.Count > 0)
+                {
+                    var totalIncome = 0;
+                    foreach (var incomeList in ViewBag.TenantDetail)
+                    {
+                        totalIncome += incomeList.TotalIncome;
+                    }
+
+                    if(totalIncome > 0){
+                        <p>$@totalIncome.ToString("#,###")</p>
+                    }
+                    else
+                    {
+                        <p style="font-weight: bold; font-style: italic;">No Data</p>
+                    }
+                }
+            }
+        </div>
+    </div>
+    <div>
+        <div class="dashboard_chart" style="display:inline-block; width: 48%;">
+            <div>
+                <canvas id="BubbleChart"></canvas>
+            </div>
+        </div>
+        <div class="dashboard_chart" style="display:inline-block; width: 48%;">
+            <div>
+                <canvas id="ProductSellDetail"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const unitRentctx = document.getElementById('UnitRentChart');
+    const bubbleChartCtx = document.getElementById('BubbleChart');
+    const productSellCtx = document.getElementById('ProductSellDetail');
+
+    const unitRentDataList = [];
+    const unitRentTenantList = [];
+    const unitRentReportDateList = [];
+    const unitRentColorList = [];
+    const bubbleChartList = [];
+    const bubbleChartDataList = [];
+    const productQuantityList = [];
+    const productTotalQuantityList = [];
+    @if(ViewBag.TenantDetail != null)
+    {
+        if(ViewBag.TenantDetail.Count > 0)
+        {
+            foreach (var unitList in ViewBag.TenantDetail)
+            {
+                //unit rent chart
+                @:unitRentDataList.push('@unitList.UnitRent');
+                @:unitRentTenantList.push('@unitList.TenantName');
+                @:unitRentReportDateList.push('@unitList.Date');
+                @:unitRentColorList.push('@unitList.ColorCode');
+                //bubble chart
+                @:var bubbleResult = '';
+                @:var bubbleValue = '';
+                @:bubbleValue = {'x':  @unitList.UnitRent,  'y': @unitList.AreaSqft,  'r':@(unitList.TotalIncome/1000000) };
+                @:bubbleChartDataList.push(bubbleValue);
+                @:bubbleResult = {'label': '@unitList.TenantName', 'backgroundColor':'@unitList.ColorCode', 'data':[bubbleValue]};
+                @:bubbleChartList.push(bubbleResult);
+                //product chart
+                @:var productValue = [];
+                @:productValue.push('@unitList.ProductMinPriceValue');
+                @:productValue.push('@unitList.ProductMaxPriceValue');
+                @:productQuantityList.push(productValue);
+                @:productTotalQuantityList.push('@unitList.TotalSellQuantity')
+            }
+        }
+    }
+    
+    /* For Unit Rent */
+    new Chart(unitRentctx, {
+        type: 'bar',
+        data: {
+            labels: unitRentTenantList,
+            datasets: [{
+                data: unitRentDataList,
+                backgroundColor: unitRentColorList,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            layout: {
+                padding: {
+                    bottom: 100
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: 'Unit Rent Chart',
+                    color: '#36A2EB',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Unit Rent',
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Tenant',
+                    }
+                }
+            }
+        }
+    });
+    /* For Unit Rent */
+    /* For Income Area Bubble Chart */
+    new Chart(bubbleChartCtx, {
+        type: 'bubble',
+        data: {
+            datasets: bubbleChartList
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: 'Income Area Bubble Chart',
+                    color: '#36A2EB',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            let label = "";
+                            label = "Tenant Name: " + context.dataset.label + ", Unit Rent: " + context.raw.x.toLocaleString() + ", " + "Area (sq.ft.): " + context.raw.y.toLocaleString() + 
+                            ", Total Income: ~" + (context.raw.r*1000000).toLocaleString();
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Area (sq.ft.)',
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Unit Rent',
+                    }
+                }
+            }
+        }
+    }); 
+    /* For Income Area Bubble Chart */
+    /* For Product Sell Detail Chart */
+    new Chart(productSellCtx, {
+        type: 'bar',
+        data: {
+            labels: unitRentTenantList,
+            datasets: [
+                {
+                    data: productTotalQuantityList,
+                    backgroundColor: '#F79646',
+                    borderColor: '#F79646', 
+                    fill: false, 
+                    tension: 0,
+                    type: 'line',
+                    labels: unitRentTenantList
+                },
+                {
+                    data: productQuantityList,
+                    backgroundColor: unitRentColorList,
+                    borderWidth: 1, 
+                    type: 'bar',
+                    labels: unitRentTenantList
+                }
+            ]
+        },
+        options: {
+            plugins: {
+                legend: {
+                    display: false,
+                },
+                title: {
+                    display: true,
+                    text: 'Product Sell Quantity Chart',
+                    color: '#36A2EB',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: (context) => {
+                            let label = "";
+                            if (context.dataset.type == 'bar') 
+                                label = "Min. Price: " + context.raw[0].toLocaleString() + ", " + "Max. Price: " + context.raw[1].toLocaleString();
+                           else
+                                label = "Total Sell Quantity: " + context.raw.toLocaleString();
+                   
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Product Price',
+                    },
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Tenant',
+                    }
+                }
+            }
+        }
+    });
+    /* For Product Sell Detail Chart */
+</script>
