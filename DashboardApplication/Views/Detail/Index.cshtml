@@ -1,6 +1,67 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Detail Information";
 }
+<link rel="stylesheet" href="~/css/DetailSearch.css" />
+@section scripts{
+    <script>
+        $(document).ready(function () {
+            console.log('@ViewData["currentDate"]');
+            $('#asOfDatePicker').val('@ViewData["currentDate"]');
+        });
+    </script>
+}
+
 <h1>@ViewData["Title"]</h1>
 
-<p>For test only.</p>
+<div class="search_criteria">
+    <form asp-controller="Detail" asp-action="Index">
+        <p>
+            As of Date: <input id="asOfDatePicker" type="date" name="FilterDateTextBox" />
+            <input type="submit" value="submit" />
+        </p>
+
+    </form>
+</div>
+
+<div class="filter_detail_content">
+    @if (Model.SearchDetailList != null)
+    {
+        if (Model.SearchDetailList.Count > 0)
+        {
+            <table id="detail_table" border="1">
+                <thead>
+                    <tr>
+                        <th>Shop Name</th>
+                        <th>Date</th>
+                        <th>Unit Rent</th>
+                        <th>Total Income</th>
+                        <th>Area Sqft</th>
+                        <th>Total Sell Quantity</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.SearchDetailList)
+                    {
+                        <tr>
+                            <td>@item.TenantName</td>
+                            <td>@item.Date</td>
+                            <td>@item.UnitRent</td>
+                            <td>$@String.Format("{0:#,###.##}", item.TotalIncome)</td>
+                            <td>@String.Format("{0:#,###.00}", item.AreaSqft)</td>
+                            <td>@String.Format("{0:#,###}", item.TotalSellQuantity)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="no_record_p">No Record</p>
+        }
+    }
+    else
+    {
+        <p class="no_record_p">No Record</p>
+    }
+</div>
+
