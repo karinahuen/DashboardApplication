@@ -31,12 +31,12 @@
             <table id="detail_table" border="1">
                 <thead>
                     <tr>
-                        <th>Shop Name</th>
-                        <th>Date</th>
-                        <th>Unit Rent</th>
-                        <th>Total Income</th>
-                        <th>Area Sqft</th>
-                        <th>Total Sell Quantity</th>
+                        <th>@Html.ActionLink("Shop Name", "SortFilter", "Detail", new { sortOrderName = "TenantName", sortOrder = ViewBag.SortOrderBy })</th>
+                        <th>@Html.ActionLink("Date", "SortFilter", "Detail", new { sortOrderName = "Date", sortOrder = ViewBag.SortOrderBy })</th>
+                        <th>@Html.ActionLink("Unit Rent", "SortFilter", "Detail", new { sortOrderName = "UnitRent", sortOrder = ViewBag.SortOrderBy })</th>
+                        <th>@Html.ActionLink("Total Income", "SortFilter", "Detail", new { sortOrderName = "TotalIncome", sortOrder = ViewBag.SortOrderBy })</th>
+                        <th>@Html.ActionLink("Area Sqft", "SortFilter", "Detail", new { sortOrderName = "AreaSqft", sortOrder = ViewBag.SortOrderBy })</th>
+                        <th>@Html.ActionLink("Total Sell Quantity", "SortFilter", "Detail", new { sortOrderName = "TotalSellQuantity", sortOrder = ViewBag.SortOrderBy })</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -1,9 +1,12 @@
 ﻿using DashboardApplication.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Web;
 
 namespace DashboardApplication.Controllers
 {
@@ -11,6 +14,8 @@ namespace DashboardApplication.Controllers
     {
         private readonly ILogger<DetailController> _logger;
         public DetailSearchViewModel detailSearchModel = new DetailSearchViewModel();
+        public const string SessionDetailSearchDate = "_DetailSearchDate";
+        public const string SessionCurrentFilterName = "_DetailSearchCurrentFilterName";
 
         public DetailController(ILogger<DetailController> logger)
         {
@@ -19,12 +24,23 @@ namespace DashboardApplication.Controllers
 
         public IActionResult Index()
         {
+            //Clear Session
+            clearSession();
+
             detailSearchModel.SearchDetailList = new List<DashboardViewModel>();
 
             List<DashboardViewModel> tenantList = GetDashboardDetail();
             detailSearchModel.SearchDetailList = tenantList;
             DateTime currentDate = DateTime.Today;
-            ViewData["currentDate"] = currentDate.ToString("yyyy-MM-dd");
+            string DateDesc = currentDate.ToString("yyyy-MM-dd");
+            ViewData["currentDate"] = DateDesc;
+
+            //Set Session
+            setSession(DateDesc);
+
+
+            //Set Sort Order By
+            SetSortingOrder("");
 
             return View(detailSearchModel);
         }
@@ -34,29 +50,51 @@ namespace DashboardApplication.Controllers
         {
 
             detailSearchModel.SearchDetailList = new List<DashboardViewModel>();
-            List<DashboardViewModel> searchTenantList = GetDashboardDetail();
+
+            //Set Session
+            setSession(FilterDateTextBox);
 
             //check the date validation in text box
-            DateTime temp;
-            if (DateTime.TryParse(FilterDateTextBox, out temp))
-            {
-                temp = DateTime.Parse(FilterDateTextBox);
-
-                IEnumerable<DashboardViewModel> searchDetailQuery =
-                from teantDetail in searchTenantList
-                where DateTime.Parse(teantDetail.Date) <= temp
-                select teantDetail;
-
-                detailSearchModel.SearchDetailList = searchDetailQuery.ToList();
-            }
-            else if (string.IsNullOrEmpty(FilterDateTextBox))
-            {
-                detailSearchModel.SearchDetailList = searchTenantList;
-            }
+            detailSearchModel.SearchDetailList = FilterByDateList(FilterDateTextBox);
 
             ViewData["currentDate"] = FilterDateTextBox;
 
+            //Set Sort Order By
+            SetSortingOrder("");
+
+
             return View(detailSearchModel);
+        }
+
+        public void SetSortingOrder(string sortName)
+        {
+            if (!string.IsNullOrEmpty(HttpContext.Session.GetString(SessionCurrentFilterName)))
+            {
+                if(sortName != HttpContext.Session.GetString(SessionCurrentFilterName))
+                {
+                    setDefaultSortOrderBy("DESC", "DESC");
+                }
+                else
+                {
+                    //set default
+                    setDefaultSortOrderBy("ASC", "DESC");
+                }
+            }
+            else
+            {
+                //set default
+                setDefaultSortOrderBy("ASC", "DESC");
+            }
+        }
+
+        public void setDefaultSortOrderBy(string currentSortOrderBy, string setSortOrderByValue)
+        {
+
+            if (ViewBag.SortOrderBy == currentSortOrderBy)
+                ViewBag.SortOrderBy = setSortOrderByValue;
+            else
+                ViewBag.SortOrderBy = currentSortOrderBy;
+
         }
 
         public List<DashboardViewModel> GetDashboardDetail()
@@ -106,6 +144,101 @@ namespace DashboardApplication.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        }
+
+        public IActionResult SortFilter(string sortOrderName, string sortOrder)
+        {
+            ViewBag.SortOrderBy = sortOrder;
+            detailSearchModel.SearchDetailList = new List<DashboardViewModel>();
+
+            List<DashboardViewModel> filteredTenantList = new List<DashboardViewModel>();
+
+            //check the current valid search date
+            if (!string.IsNullOrEmpty(HttpContext.Session.GetString(SessionDetailSearchDate)))
+            {
+                String sessionSearchDate = HttpContext.Session.GetString(SessionDetailSearchDate);
+                ViewData["currentDate"] = sessionSearchDate;
+
+                //check the date validation in text box
+                filteredTenantList = FilterByDateList(sessionSearchDate);
+            }
+
+            //Set Sort Order By
+            SetSortingOrder(sortOrderName);
+
+            if (filteredTenantList.Count > 0)
+            {
+                if (ViewBag.SortOrderBy == "DESC")
+                {
+                    var descTenantList = from t in filteredTenantList
+                                         orderby GetPropertyValue(t, sortOrderName) descending
+                                         select t;
+                    detailSearchModel.SearchDetailList = descTenantList.ToList();
+                }
+                else
+                {
+                    var ascTenantList = from t in filteredTenantList
+                                        orderby GetPropertyValue(t, sortOrderName) ascending
+                                        select t;
+                    detailSearchModel.SearchDetailList = ascTenantList.ToList();
+                }
+            }
+
+            //Set new session for order by
+            HttpContext.Session.SetString(SessionCurrentFilterName, sortOrderName);
+       
+
+
+            return View("Index", detailSearchModel);
+        }
+
+
+        public List<DashboardViewModel> FilterByDateList(string filterValue)
+        {
+            List<DashboardViewModel> filterByDateLists = new List<DashboardViewModel>();
+            List<DashboardViewModel> searchTenantList = GetDashboardDetail();
+
+            //check the date validation in text box
+            DateTime temp;
+            if (DateTime.TryParse(filterValue, out temp))
+            {
+                temp = DateTime.Parse(filterValue);
+
+                IEnumerable<DashboardViewModel> searchDetailQuery =
+                from td in searchTenantList
+                where DateTime.Parse(td.Date) <= temp
+                select td;
+
+                filterByDateLists = searchDetailQuery.ToList();
+            }
+            else if (string.IsNullOrEmpty(filterValue))
+            {
+                filterByDateLists = searchTenantList;
+            }
+
+            return filterByDateLists;
+        }
+
+
+        public void setSession(string value)
+        {
+            //Set Search Date Textbox value
+            HttpContext.Session.SetString(SessionDetailSearchDate, value);
+        }
+
+        public void clearSession()
+        {
+            if (!string.IsNullOrEmpty(HttpContext.Session.GetString(SessionDetailSearchDate)) ||
+                !string.IsNullOrEmpty(HttpContext.Session.GetString(SessionCurrentFilterName)))
+            {
+                HttpContext.Session.Clear();
+            }
+        }
+
+        private static object GetPropertyValue(object obj, string property)
+        {
+            System.Reflection.PropertyInfo propertyInfo = obj.GetType().GetProperty(property);
+            return propertyInfo.GetValue(obj, null);
         }
     }
 }
