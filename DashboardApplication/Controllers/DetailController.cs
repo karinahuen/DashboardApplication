@@ -13,7 +13,7 @@ namespace DashboardApplication.Controllers
     public class DetailController : Controller
     {
         private readonly ILogger<DetailController> _logger;
-        public DetailSearchViewModel detailSearchModel = new DetailSearchViewModel();
+        private DetailSearchViewModel detailSearchModel = new DetailSearchViewModel();
         public const string SessionDetailSearchDate = "_DetailSearchDate";
         public const string SessionCurrentFilterName = "_DetailSearchCurrentFilterName";
 
@@ -25,7 +25,7 @@ namespace DashboardApplication.Controllers
         public IActionResult Index()
         {
             //Clear Session
-            clearSession();
+            ClearSession();
 
             detailSearchModel.SearchDetailList = new List<DashboardViewModel>();
 
@@ -36,7 +36,7 @@ namespace DashboardApplication.Controllers
             ViewData["currentDate"] = DateDesc;
 
             //Set Session
-            setSession(DateDesc);
+            SetSession(DateDesc);
 
 
             //Set Sort Order By
@@ -52,7 +52,7 @@ namespace DashboardApplication.Controllers
             detailSearchModel.SearchDetailList = new List<DashboardViewModel>();
 
             //Set Session
-            setSession(FilterDateTextBox);
+            SetSession(FilterDateTextBox);
 
             //check the date validation in text box
             detailSearchModel.SearchDetailList = FilterByDateList(FilterDateTextBox);
@@ -72,22 +72,22 @@ namespace DashboardApplication.Controllers
             {
                 if(sortName != HttpContext.Session.GetString(SessionCurrentFilterName))
                 {
-                    setDefaultSortOrderBy("DESC", "DESC");
+                    SetDefaultSortOrderBy("DESC", "DESC");
                 }
                 else
                 {
                     //set default
-                    setDefaultSortOrderBy("ASC", "DESC");
+                    SetDefaultSortOrderBy("ASC", "DESC");
                 }
             }
             else
             {
                 //set default
-                setDefaultSortOrderBy("ASC", "DESC");
+                SetDefaultSortOrderBy("ASC", "DESC");
             }
         }
 
-        public void setDefaultSortOrderBy(string currentSortOrderBy, string setSortOrderByValue)
+        public void SetDefaultSortOrderBy(string currentSortOrderBy, string setSortOrderByValue)
         {
 
             if (ViewBag.SortOrderBy == currentSortOrderBy)
@@ -101,9 +101,9 @@ namespace DashboardApplication.Controllers
         {
 
             DateTime currntDateTime = DateTime.Now;
-            String currentDateString = "2023-1-1";
-            String currentPreviousDateString = "2022-12-31";
-            String currentPreviousThreeMonthDateString = "2022-11-1";
+            string currentDateString = "2023-1-1";
+            string currentPreviousDateString = "2022-12-31";
+            string currentPreviousThreeMonthDateString = "2022-11-1";
             int totalCount = 3;
             for (int i = 0; i < totalCount; i++)
             {
@@ -156,7 +156,7 @@ namespace DashboardApplication.Controllers
             //check the current valid search date
             if (!string.IsNullOrEmpty(HttpContext.Session.GetString(SessionDetailSearchDate)))
             {
-                String sessionSearchDate = HttpContext.Session.GetString(SessionDetailSearchDate);
+                string sessionSearchDate = HttpContext.Session.GetString(SessionDetailSearchDate);
                 ViewData["currentDate"] = sessionSearchDate;
 
                 //check the date validation in text box
@@ -220,13 +220,13 @@ namespace DashboardApplication.Controllers
         }
 
 
-        public void setSession(string value)
+        public void SetSession(string value)
         {
             //Set Search Date Textbox value
             HttpContext.Session.SetString(SessionDetailSearchDate, value);
         }
 
-        public void clearSession()
+        public void ClearSession()
         {
             if (!string.IsNullOrEmpty(HttpContext.Session.GetString(SessionDetailSearchDate)) ||
                 !string.IsNullOrEmpty(HttpContext.Session.GetString(SessionCurrentFilterName)))
