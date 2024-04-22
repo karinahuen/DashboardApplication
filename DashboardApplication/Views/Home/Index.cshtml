@@ -8,19 +8,19 @@
 @*<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>*@
 <div class="dashboard_box" style="margin-bottom:1%;">
     <div class="dashboard_box_desc">
-        <p class="box_value_p">@ViewData["Rate"]%</p>
-        <p>Rate</p>
+        <p class="box_value_p">@String.Format("{0:#,##0.00}", @ViewBag.TotalSalesRate)%</p>
+        <p>Total Sales Quantity Rate</p>
     </div>
     <div class="dashboard_box_desc">
-        <p class="box_value_p">@ViewBag.ViewValue Million</p>
-        <p>View</p>
+        <p class="box_value_p">@ViewBag.TotalSales</p>
+        <p>Total Sales Quantity</p>
     </div>
     <div class="dashboard_box_desc_2">
-        <p class="box_value_p">@ViewData["IncomeRate"]%</p>
+        <p class="box_value_p">@String.Format("{0:#,##0.00}", ViewData["IncomeRate"])%</p>
         <p>Income Rate Growth</p>
     </div>
     <div class="dashboard_box_desc_2">
-        <p class="box_value_p">@ViewData["TotlaIncome"] Million</p>
+        <p class="box_value_p">$@ViewData["TotlaIncome"] Million</p>
         <p>Total Income</p>
     </div>
 </div>
@@ -44,7 +44,7 @@
                         {
                             <div style="padding: 0!important;">
                                 <p style="display:inline-block; color:@tenantLists.ColorCode;">@tenantLists.TenantName</p>
-                                <p style="display:inline-block; margin-left:3%; color:@tenantLists.ColorCode;">$@tenantLists.TotalIncome?.ToString("#,###")</p>
+                                <p style="display:inline-block; margin-left:3%; color:@($"{tenantLists.ColorCode}%");">$@tenantLists.TotalIncome.ToString("#,###")</p>
                             </div>
                         }
                     }
@@ -82,7 +82,7 @@
         </div>
         <div class="dashboard_chart" style="display:inline-block; width: 48%;">
             <div>
-                <canvas id="ProductSellDetail"></canvas>
+                <canvas id="ProductSalesDetail"></canvas>
             </div>
         </div>
     </div>
@@ -91,7 +91,7 @@
 <script>
     const unitRentctx = document.getElementById('UnitRentChart');
     const bubbleChartCtx = document.getElementById('BubbleChart');
-    const productSellCtx = document.getElementById('ProductSellDetail');
+    const productSalesCtx = document.getElementById('ProductSalesDetail');
 
     const unitRentDataList = [];
     const unitRentTenantList = [];
@@ -110,7 +110,7 @@
                 //unit rent chart
                 @:unitRentDataList.push('@unitList.UnitRent');
                 @:unitRentTenantList.push('@unitList.TenantName');
-                @:unitRentReportDateList.push('@unitList.Date');
+                @:unitRentReportDateList.push('@unitList.IncomeMonthDate');
                 @:unitRentColorList.push('@unitList.ColorCode');
                 //bubble chart
                 @:var bubbleResult = '';
@@ -124,7 +124,7 @@
                 @:productValue.push('@unitList.ProductMinPriceValue');
                 @:productValue.push('@unitList.ProductMaxPriceValue');
                 @:productQuantityList.push(productValue);
-                @:productTotalQuantityList.push('@unitList.TotalSellQuantity')
+                @:productTotalQuantityList.push('@unitList.TotalSalesQuantity')
             }
         }
     }
@@ -219,8 +219,8 @@
         }
     }); 
     /* For Income Area Bubble Chart */
-    /* For Product Sell Detail Chart */
-    new Chart(productSellCtx, {
+    /* For Product Sales Detail Chart */
+    new Chart(productSalesCtx, {
         type: 'bar',
         data: {
             labels: unitRentTenantList,
@@ -250,7 +250,7 @@
                 },
                 title: {
                     display: true,
-                    text: 'Product Sell Quantity Chart',
+                    text: 'Product Sales Quantity Chart',
                     color: '#36A2EB',
                 },
                 tooltip: {
@@ -260,7 +260,7 @@
                             if (context.dataset.type == 'bar') 
                                 label = "Min. Price: " + context.raw[0].toLocaleString() + ", " + "Max. Price: " + context.raw[1].toLocaleString();
                            else
-                                label = "Total Sell Quantity: " + context.raw.toLocaleString();
+                                label = "Total Sales Quantity: " + context.raw.toLocaleString();
                    
                             return label;
                         }
@@ -284,5 +284,5 @@
             }
         }
     });
-    /* For Product Sell Detail Chart */
+    /* For Product Sales Detail Chart */
 </script>

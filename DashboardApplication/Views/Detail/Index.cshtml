@@ -32,11 +32,11 @@
                 <thead>
                     <tr>
                         <th>@Html.ActionLink("Shop Name", "SortFilter", "Detail", new { sortOrderName = "TenantName", sortOrder = ViewBag.SortOrderBy })</th>
-                        <th>@Html.ActionLink("Date", "SortFilter", "Detail", new { sortOrderName = "Date", sortOrder = ViewBag.SortOrderBy })</th>
+                        <th>@Html.ActionLink("Date", "SortFilter", "Detail", new { sortOrderName = "IncomeMonthDate", sortOrder = ViewBag.SortOrderBy })</th>
                         <th>@Html.ActionLink("Unit Rent", "SortFilter", "Detail", new { sortOrderName = "UnitRent", sortOrder = ViewBag.SortOrderBy })</th>
                         <th>@Html.ActionLink("Total Income", "SortFilter", "Detail", new { sortOrderName = "TotalIncome", sortOrder = ViewBag.SortOrderBy })</th>
                         <th>@Html.ActionLink("Area Sqft", "SortFilter", "Detail", new { sortOrderName = "AreaSqft", sortOrder = ViewBag.SortOrderBy })</th>
-                        <th>@Html.ActionLink("Total Sell Quantity", "SortFilter", "Detail", new { sortOrderName = "TotalSellQuantity", sortOrder = ViewBag.SortOrderBy })</th>
+                        <th>@Html.ActionLink("Total Sales Quantity", "SortFilter", "Detail", new { sortOrderName = "TotalSalesQuantity", sortOrder = ViewBag.SortOrderBy })</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,11 +44,11 @@
                     {
                         <tr>
                             <td>@item.TenantName</td>
-                            <td>@item.Date</td>
+                            <td>@item.IncomeMonthDate</td>
                             <td>@item.UnitRent</td>
                             <td>$@String.Format("{0:#,###.##}", item.TotalIncome)</td>
                             <td>@String.Format("{0:#,###.00}", item.AreaSqft)</td>
-                            <td>@String.Format("{0:#,###}", item.TotalSellQuantity)</td>
+                            <td>@String.Format("{0:#,###}", item.TotalSalesQuantity)</td>
                         </tr>
                     }
                 </tbody>
